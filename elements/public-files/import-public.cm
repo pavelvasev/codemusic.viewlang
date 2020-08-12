@@ -1,0 +1,26 @@
+##### add_import.rb
+path = ctx.input[0]
+ctx.r = [ {:tag => :expression, :value => "import \"#{path}\"\n\n"} ].concat( [ctx.r] )
+
+##### copy_dir.rb
+src = ctx.input[0]
+tgt = ctx.input[1]
+
+require "fileutils"
+
+if !File.exist?(tgt)
+  FileUtils.mkpath( tgt )
+end
+
+ctx.machine.log "copy files: #{src} -> #{tgt}" do
+  FileUtils.cp_r( src + "/.",tgt )
+end
+
+ctx.r = []
+
+##### scene.rb priority=-8 @add_import_public
+r = ctx.machine.compute( :add_import,["./public"],"q" )
+ctx.r = [r, ctx.r]
+src=File.join(ELEMENTS_DIR,"public.src")
+tgt=File.join(TARGET_DIR,"public")
+ctx.machine.compute( :copy_dir,[src,tgt],"q" )
