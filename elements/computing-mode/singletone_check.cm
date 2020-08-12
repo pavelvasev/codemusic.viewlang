@@ -29,7 +29,7 @@ def obj_is_sg_candidate( obj )
   # obj.is_a?(Hash) && (obj[:items] || []).length == 0 && obj[ obj[:tag] ] && obj[:tag] != :tdata
   # какое-то дурное непонятное мне теперь условие obj[ obj[:tag] ]
   # и плюсом к нему - не надо параметры вытаскивать в синглтоны
-  obj.is_a?(Hash) && (obj[:items] || []).length == 0 && obj[:tag] && obj[:tag] != :tdata && obj[:tag] != :param # вот такой вот прос!obj[:singletone_disabled]
+  obj.is_a?(Hash) && (obj[:items] || []).length == 0 && obj[:tag] && obj[:tag] != :tdata && obj[:tag] != :param # && !obj[:singletone_disabled]
 end
 
 # у нас теперь стек машин - надо изучить их имена

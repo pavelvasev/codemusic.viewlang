@@ -8,6 +8,7 @@
 `` ну да ладно пока
 ############# load_file.rb!
 res = { :tag => :object, :type => "TextLoader2", :xtract_from_property => true }
+res[:id] = ctx.obj[:id] if ctx.obj[:id]
 acc = []
 ctx.input.each.with_index do |v,index|
   code = { :tag => :computing_mode, 

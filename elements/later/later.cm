@@ -6,9 +6,9 @@ def find_qml_property( obj, name )
     return
   end
   rec = obj[:items].detect{ |rec| 
-    # STDERR.puts "AHTUNG: rec=#{rec.inspect}" if !rec.is_a?(Hash) 
+    #STDERR.puts "AHTUNG: rec=#{rec.inspect}" if !rec.is_a?(Hash) 
     rec = rec[0] if rec.is_a?(Array)
-    (rec[:tag] == :property || rec[:tag] == :property_set) && rec[:name] == name 
+    rec.is_a?(Hash) && (rec[:tag] == :property || rec[:tag] == :property_set) && rec[:name] == name 
   }
   rec = rec[0] if rec.is_a?(Array)
   rec
