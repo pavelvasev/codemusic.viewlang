@@ -1,0 +1,37 @@
+#### getparam.rb!
+STDERR.puts "getparam invoked.. obj=#{obj}"
+attr = obj[:attr] || "val"
+ctx.r = { :tag => :expression, :value => "param_#{convert_data_name(ctx,obj[:name]||obj[:tag].to_s)}.#{attr}" }
+
+#### param.erb!=
+<% STDERR.puts "makeparam invoked. obj=#{obj}" %>
+<% def convert_data_name(k)
+     ctx.machine.name + "_" + k.gsub(/\.|,/,"_")
+   end
+%>
+<object type="Param">
+  <attr name="id">
+    <%= "param_#{convert_data_name obj[:name]}" %>
+  </attr>
+  <property_set name="text" value="'<%= obj[:name]%>'"/>
+  <property name="val" value="values ? values[value] : value"/>
+</object>
+`` маленькая шутка // но может лучше хотя бы params.name??
+<% ctx.machine.add_cond ("params."+obj[:name].to_s).to_sym, {:tag => :getparam, :name => obj[:name]}, :ctx_index => 0 %>
+
+############### erb
+<% %w( min max value values step).each do |p| %>
+<%= "\#\#\#\#"%> param.rb [<%=p%>]
+
+deploy_property( ctx.r, "<%=p%>", obj[:<%=p%>] )
+
+<% end %>
+
+#### param.rb [text]
+deploy_property( ctx.r, "text", "\"#{obj[:text]}\"" )
+
+#### param.rb [sliding]
+deploy_property( ctx.r, "enableSliding", obj[:sliding] )
+
+#### param.rb [combo]
+deploy_property( ctx.r, "comboEnabled", obj[:combo] )

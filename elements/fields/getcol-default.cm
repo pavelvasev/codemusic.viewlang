@@ -1,0 +1,14 @@
+`` решил я сделать чобы у getcol можно было указывать default-значение
+`` для этого мне пришлось во всех ветках getcol
+`` вместо исключений возвращать :value_not_found значение
+
+####### getcol.rb priority=-4  @getcol_default
+if ctx.r == :value_not_found
+  if ctx.obj[:default]
+    ctx.r = ctx.obj[:default]
+  else
+    field = ctx.input[0]
+    elemname = ctx.input[1]
+    raise "getcol: value not found! elemname=#{elemname}, field=#{field}"
+  end
+end

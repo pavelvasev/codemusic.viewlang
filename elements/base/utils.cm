@@ -1,0 +1,33 @@
+#### main.rb prepend=true
+`` вход r - объект, в который вставить item
+`` выход - модифицированный r
+def deploy_qml_item( r,item )
+  if !r.is_a?(Hash)
+    raise "deploy_qml_item! arg0 is not a hash! r=#{r.inspect}"
+  end
+  r[:items] ||= []
+  r[:items].push( item )
+  #STDERR.puts "deployed property name=#{name} value=#{value.inspect}"
+  r
+end
+
+`` вход r - объект, в который надо добавить свойство (property) с именем name и значением value
+`` по сути, это как demploy_qml_item, но еще фильтрует, если уже были такие свойства
+def deploy_property( r,name, value, tag = :property_set )
+  r[:items] ||= []
+  r[:items].reject!{ |item| item.is_a?(Hash) && (item[:tag] == :property_set || item[:tag] == :property ) && item[:name] == name }
+  r[:items].push( { :tag => tag, :name => name, :value => value })
+  STDERR.puts "deployed property name=#{name} value=#{value.inspect}"
+  r[:items].last
+  # todo проверить может уже такое есть
+end
+
+def set_type( r,name )
+  r[:type] = name
+  r
+end
+
+# преобразовывает имя с точечками в имя с _ - ценно для генерации идентификаторов
+def convert_data_name(ctx,k)
+  ctx.machine.name + "_" + k.gsub(/\.|,/,"_")
+end

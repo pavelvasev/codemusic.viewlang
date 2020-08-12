@@ -1,0 +1,6 @@
+####### field.rb @field_add_parent_col
+field = ctx.r
+field.add_code :parent, lambda { |ctx_f|
+  ctx_f.r = field.parent_machine
+}
+

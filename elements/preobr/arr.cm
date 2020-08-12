@@ -1,0 +1,38 @@
+### arr_remove_empty.txt
+function (arr) {
+  return arr.filter( function(item) { return item.length>0; });
+}
+
+### arrmax.txt
+function (arr) {
+  var r = -1000000;
+  arr.forEach( function(item) { r = Math.max(r,item) } )
+  return r;
+}
+
+### arrabs.txt
+function (arr) {
+  return arr.map( function(item) { return Math.abs(item); } )
+}
+
+### arrmulc.txt
+function (arr,coef) {
+  return arr.map( function(item) { return item*coef; } )
+}
+
+### arraddc.txt
+function (arr,coef) {
+  return arr.map( function(item) { return item+coef; } )
+}
+
+### arrget.txt
+function (arr,index) {
+  return arr[ index ];
+}
+
+### arrconcat.txt
+function (arr1,arr2) {
+  if (!Array.isArray(arr1)) arr1=[arr1];
+  if (!Array.isArray(arr2)) arr1=[arr2];
+  return arr1.concat(arr2);
+}

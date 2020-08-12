@@ -1,0 +1,18 @@
+####### field.rb @field_add_tdata_col
+field = ctx.r
+
+field.state[:f_input] = ctx[:tree_input]
+
+# если делать без привязки к getcol, то выходит ерунда - эта штука заменяет обычную tdata
+# а обычная tdata работает по другим входам совсем
+
+field.add_code :tdata_for_field, lambda { |ctx_f|
+#  STDERR.puts "field's tdata called"
+  d = field.state[:f_input] = ctx.eval_input( field.state[:f_input] )
+  ctx_f.r = if ctx_f.obj[:get]
+    d[ ctx_f.obj[:get].to_i ]
+    else
+    d
+  end
+}
+field.add_cond [:tdata,:getcol_invokation], :tdata_for_field

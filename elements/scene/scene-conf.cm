@@ -1,0 +1,16 @@
+`` позволяет нам конфигурировать сцену!
+`` для этого надо создать конвейер sceneconf и чтобы он возвращал строчку из хеша веб-страницы
+`` без #-символа, только json-часть.
+
+`` значение по умолчанию - пустое
+#### sceneconf.txt
+
+#### scene.rb
+k = ctx.machine.compute( :sceneconf, [], "scene-conf" )
+if k.is_a?(Hash)
+  k = JSON.generate(k)
+end
+deploy_property( ctx.r, "sceneconf", "'#{k}'", :property_set ) if k && k.length > 0
+`` короче это заработает когда мы руби научим method-missing
+`` а для этого надо новый контекст
+`` delploy_property( ctx.r, "sceneconf", "'#{sceneconf}'", :property_set )

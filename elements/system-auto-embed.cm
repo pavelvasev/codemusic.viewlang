@@ -1,0 +1,38 @@
+### params.rb priority=-2 @auto_embed_children_params
+q = ctx.machine.compute( {:tag => :"this.children"},[],"params-get-children" )
+acc = []
+for c in q do
+  r = c.compute( :params,[],"params" )
+  next if r.nil?
+  r = [r] if !r.is_a?(Array)
+  acc.concat(r)
+end
+
+#ctx.r = [] if ctx.r.nil?
+#ctx.r = [ctx.r] if !ctx.r.is_a?(Array)
+#ctx.r = ctx.r + acc
+# обалденная загадка.. если использовать rappend - то возникает чухня с setup_info
+ctx.rappend = acc
+
+
+### visual.rb priority=-2 @auto_embed_children_visuals
+q = ctx.machine.compute( {:tag => :"this.children"},[],"params-get-children" )
+acc = []
+for c in q do
+  r = c.compute( :visual,[],"visuals" )
+  next if r.nil?
+  r = [r] if !r.is_a?(Array)
+  acc.concat(r)
+end
+STDERR.puts "QUQU before visual assign ctx.r is #{ctx.r.inspect}"
+STDERR.puts "and i will add acc=#{acc.inspect}"
+#ctx.r = [] if ctx.r.nil?
+#ctx.r = [ctx.r] if !ctx.r.is_a?(Array)
+#ctx.r = ctx.r + acc
+ctx.rappend = acc
+STDERR.puts "affter append, ctx.r is #{ctx.r.inspect}"
+STDERR.puts "btw ctx.obj = #{ctx.obj}"
+STDERR.puts "codetrack = #{ctx[:code_track].inspect}"
+
+### children
+<group/>

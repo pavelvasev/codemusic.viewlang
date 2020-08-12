@@ -1,0 +1,80 @@
+`` ловим доступ к хешам и массивам через getcol
+`` причем к динамическим тоже!
+
+####### getcol.rb priority=4 prepend=true @getcol_hash
+
+field = ctx.input[0]
+elemname = ctx.input[1]
+
+if elemname.nil? || elemname.length == 0
+  raise "getcol-hash: elemname is empty! field=#{field}"
+end
+
+if !field.respond_to?(:compute) `` не стандартный случай - то есть наш
+STDERR.puts "getcol-hash. field=#{field}, elemname=#{elemname}"
+
+  if field.is_a?(Hash)
+    if field[:tag] && field[:id] # решил добавить еще проверку на id - потому что появился случай, когда есть tag, но нам надо из него просто вытащить подполе.. (т.е. уйти во вторую ветку if)
+      # такая ситуация, что там скорее всего некое вычисление..
+      # которое не превратилось в синглтон почему.. а ведь должно быть таковым!
+      # raise "unsupported. field should be in singletone form as string! field=#{field}"
+      raise "unsupported. field has no id! field=#{field}" if !field[:id]
+      # да пофиг. запихнем это вычисление в поддерево результата да и все. и будем ссылаться на его атупут
+      code = { :tag => :extract_part_hitro, :items => ["#{field[:id]}.output",'"*"',0,"\"#{elemname}\""] }
+      qq = ctx.machine.compute( code,[],"getcol_hash" )
+      qq[:items] ||= []
+      field.delete :xtract_from_property # надо этот ключ удалить, иначе потому что там потом тупые правила в cm2 - начинают это хватать
+      qq[:items].push field
+      ctx.r = qq
+      ctx.stop = 1
+#      STDERR.puts "HHH"
+#      STDERR.puts "HHH WE RETURNED"
+#      require "pp"
+#      PP.pp qq,STDERR
+      return
+    elsif field[:tag] == :expression && field[:value]
+      ctx.r = field[:value] + "['"+elemname+"']"
+      ctx.stop = 1
+      ctx.machine.log "getcol_hash: see expression, case 4."
+      return
+    else
+      ctx.r = field[ elemname ] || field[ elemname.to_sym ]
+      ctx.stop = 1
+      ctx.machine.log "getcol_hash: see subhash, case 1." 
+#      ctx.machine.log "field=#{field}, elemname=#{elemname.inspect}, res=#{ctx.r}"
+      # по идее это не ошибка, а просто там хеш такой.. возможно item содержит..
+      # но мне неохота запариваться щас его в extract_part_hitro вставлять..
+      #raise "emtpy result!" if ctx.r.nil?
+      if ctx.r.nil? 
+        STDERR.puts "empty result!"
+        ctx.r = :value_not_found
+      end
+    end
+    return
+  end
+  
+  if field.is_a?(Array)
+    if field.length == 0
+      raise "getcol_hash: field is empty! elemname=#{elemname}, field=#{field}"
+    end
+    ctx.r = field[ elemname.to_i ]
+    ctx.stop = 1
+    ctx.machine.log "getcol_hash: see subarray, case 2"
+    return  
+  end
+  `` ну случай динамического доступа.. ладно уж..
+  if field.is_a?(String) && field =~ /\.output/
+    ctx.machine.log "getcol_hash: see string, case 3"
+    code = { :tag => :extract_part_hitro, :items => [field,'"*"',0,"\"#{elemname}\""] }
+    qq = ctx.machine.compute( code,[],"getcol_hash" )
+    ``STDERR.puts "getcol_hash: computed code qq=#{qq}"
+    ctx.r = qq
+    ctx.stop = 1
+    return
+  end
+  
+  STDERR.puts "field="
+  STDERR.puts field.inspect
+  raise "getcol-hash: you passed non-field to getcol!"
+
+end

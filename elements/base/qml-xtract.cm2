@@ -1,0 +1,33 @@
+#### property.rb prepend=true
+@machine.add_cond [nil,:xtract_from_property], {:tag => :move_xtra_thing_to_object_body}
+
+#### property_set.rb prepend=true
+@machine.add_cond [nil,:xtract_from_property], {:tag => :move_xtra_thing_to_object_body}
+
+##### move_xtra_thing_to_object_body.rb!
+`` итак, у нас тут на входе некий объект, который уже превратился в строчку, 
+`` и который надо вытащить из проперти..
+`` а вместо него подставить id.output
+`` но нам важно знать его id, чтобы сообразно провести замену на id.output
+`` а id мы посмотрим в ctx.input
+
+`` ctx.r это строка с тем что уже сгенерировали то что надо вытащить
+`` ctx.obj это ее исходное представление, сообьразно там есть ctx.obj[:id]
+`` ctx[:parent][:parent] это вестимо видимо целевой объект, для которого рендерится это пропертя
+
+`` STDERR.puts "move_to_object called, ctx.obj=#{ctx.obj}, ctx.r=#{ctx.r}, and ctx.obj[:object]=#{ctx.obj[:object]}"
+`` STDERR.puts "btw ctx[:parent].obj=#{ctx[:parent].obj}"
+`` STDERR.puts "btw ctx[:parent2].obj=#{ctx[:parent][:parent].obj}"
+`` получается, нам теперь надо сделать так, чтобы текущее ctx.r оказалось в
+`` нутрях у ctx[:parent][:parent] рендеринга..
+`` наверное это можно сделать умно, но мне лень - просто запишу пока в xtra_subitems ему
+
+`` fail if ctx.r =~ /by qml-xtract/
+
+# STDERR.puts "move_xtra_thing is working! gonna transofer: ctx.obj=#{ctx.obj}"
+ctx[:parent][:parent].obj[:xtra_items] ||= []
+#STDERR.puts ">>>> replacting with #{ctx.obj[:id]}.output and pushing to xtra_items: #{ctx.r.dup}"
+ctx[:parent][:parent].obj[:xtra_items].push( ctx.r.dup )
+
+ctx.r = "#{ctx.obj[:id]}.output /* by qml-xtract.cm2 */"
+#ctx.r = { :tag => :expression, :value => "ctx.obj[:id]}.output /* by qml-xtract.cm2 */" }

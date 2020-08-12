@@ -1,0 +1,90 @@
+`` короче жизнь показала, что синглтоны таки лучше только в computing mode активировать
+`` еще одна может покажет - что при отсутствии аттрибутов..
+
+###### singletone_place.rb prepend=true @singletone_assigner_of_ids
+@singletone_obj_counter = 0
+def singletone_assign_id( obj )
+  if obj[:id].nil?
+    obj[:id] = "sg_obj_#{ @singletone_obj_counter = @singletone_obj_counter+1 }"
+  end
+  obj
+end
+
+###### singletone_place.rb
+@machine.add_cond [:computing_mode_rules],:activate_singletone_tracking, :prepend => true, :scope_level => :all
+ctx.r = ctx.input
+
+
+###### activate_singletone_tracking.rb!
+@machine.add_cond [nil,:ordinal], {:tag => :check_if_singletone, :singletone_area => 1}, :priority => -5, :scope_level => :all
+@machine.add_cond [nil,:ordinal], {:tag => :check_if_marked_as_singletone, :singletone_area => 1}, :priority => 5, :prepend => true, :scope_level => :all
+`` и ищщо такие надо - getcol такую отметку ставит
+@machine.add_cond [nil,:singletone_key], {:tag => :check_if_singletone, :singletone_area => 1}, :priority => -5, :scope_level => :all
+@machine.add_cond [nil,:singletone_key], {:tag => :check_if_marked_as_singletone, :singletone_area => 1}, :priority => 5, :prepend => true, :scope_level => :all
+
+####################################################### check_if_marked_as_singletone.rb!
+@singletones_memory ||= {}
+
+def obj_is_sg_candidate( obj )
+  # obj.is_a?(Hash) && (obj[:items] || []).length == 0 && obj[ obj[:tag] ] && obj[:tag] != :tdata
+  # какое-то дурное непонятное мне теперь условие obj[ obj[:tag] ]
+  # и плюсом к нему - не надо параметры вытаскивать в синглтоны
+  obj.is_a?(Hash) && (obj[:items] || []).length == 0 && obj[:tag] && obj[:tag] != :tdata && obj[:tag] != :param # вот такой вот прос!obj[:singletone_disabled]
+end
+
+# у нас теперь стек машин - надо изучить их имена
+def machines_chain_name( machine )
+  return "" if machine.nil?
+  if machine.parent_machine
+     machines_chain_name( machine.parent_machine ) + "." + machine.name
+  else
+     machine.name
+  end
+end
+
+if obj_is_sg_candidate( obj )
+#STDERR.puts "SG: is candidate"
+  key = "#{machines_chain_name( ctx.machine )}.#{obj[:singletone_key] || obj[:tag]}"
+  if @singletones_memory[ key ]
+    k = @singletones_memory[ key ]
+    # STDERR.puts "SG: found singletone. k=#{k}"
+    ctx.r = "#{k[:id]}.output /* moved to singletones, second use */"
+    ctx.stop = true # хехе
+  else
+#    STDERR.puts "SG: not found in memory"
+  end
+else
+#STDERR.puts "SG: not a candidate"  
+end
+
+###################################################### check_if_singletone.rb!
+`` задача - проверить, не является ли оный узел синглтоном, а дондеже это так,
+`` то утащить его __результат__ подалее в общие слои
+
+# STDERR.puts "SG: checking obj=#{obj}, ctx.r=#{ctx.r}"
+if obj_is_sg_candidate( obj )
+  STDERR.puts "SG: test1 passed (#{obj[:tag]})"
+  if ctx.r.is_a?(Hash) && ctx.r[:tag] == :object
+    singletone_assign_id( ctx.r )
+    key = "#{machines_chain_name( ctx.machine )}.#{obj[:singletone_key] || obj[:tag]}"
+    STDERR.puts "SG: test2 passed. adding to singletones: #{obj[:tag]} with key: #{key}"
+    @singletones_memory[ key ] = ctx.r
+    ctx.r = "#{ctx.r[:id]}.output /* moved to singletones */"
+  else
+    STDERR.puts "btw result is not an object - thus not a singletone"
+    STDERR.puts "btw2 res=#{ctx.r}"
+  end
+end
+
+###### scene.rb @add_singletones
+isfirst = true
+(@singletones_memory || []).each do |k,v|
+  if isfirst
+    deploy_qml_item( ctx.r, "\n///////////////// singletones!\n" )
+    isfirst = false
+  end
+  deploy_qml_item( ctx.r, { :tag => :expression, :value => v } )
+end
+
+`` идея доп-теста это проверять наличие obj[ obj[:tag] ] - признак того что это кусок xml-письма
+`` потому что иначе получается что y -> code_for_y и вот это code_for_y тоже так срабатывает..

@@ -1,0 +1,45 @@
+`` потребность - уметь проецировать на колонки полей массивы-массивов и хеши,
+`` т.е. указывать что колонка а берет первый элемент мм, колонка б берет второй и т.д.
+`` аналогично и с хешем, но даже проще (в хеше тоже имена)
+
+`` решение:
+`` прокси - это функция, которая создает колонки с указанными именами в аттрибуте name
+`` либо если name не узазано, то колонку с именем "any", т.е. проксирует любые имена
+`` пока что делаем только с явно указанными именами - any todo
+
+##### proxy.rb!
+mask = obj[:name] || "*"
+names = mask.is_a?(String) ? mask.split(",") : mask
+
+@proxy_nodes_counter ||= 0
+proxy_data_name = "proxied_data_#{convert_data_name(ctx,mask)}_#{@proxy_nodes_counter}".to_sym
+proxied_data_node = {:tag => :col, :name => proxy_data_name.to_s, :items => ctx.obj[:items] }
+
+acc = [proxied_data_node]
+names.each_with_index do |n,index|
+  proxy_code = { :tag => :extract_part_hitro, :items => [{:tag => "this.#{proxy_data_name}".to_sym},"\"#{n}\"",index, {:tag => :quote, :items => [{:tag => :tdata}]}] }
+
+  # четвертым аргументом туда пойдет - реальное имя колонки в случае *
+  n = "any" if n == "*"
+  acc.push( {:tag => :col, :name => n, :items => [proxy_code] } )
+end
+
+ctx.machine.compute( acc, [], "proxy-generate-cols" )
+ctx.r=:proxy_done
+
+``` функция рантайма, используемая proxy для вытаскивания кусочков из данных
+####### extract_part_hitro.txt
+function (obj,name,index,realname) {
+  if (Array.isArray(obj)) {
+     if (name == "*") // сообразно index всегда 0, но зато realname нечто настоящее
+       return obj[ parseInt(realname) ];
+     else
+       return obj[index];
+  }
+  // ну надеемся что obj это хеш
+    
+  if (name == "*")
+    return obj[realname] || [];
+      
+  return obj[name] || [];
+}

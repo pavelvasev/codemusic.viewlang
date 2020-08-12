@@ -1,0 +1,25 @@
+#### object.rb [later] prepend=true @later_generator
+
+def deploy_qml_item( r,item )
+  if !r.is_a?(Hash)
+    raise "deploy_qml_item! arg0 is not a hash! r=#{r.inspect}"
+  end
+  r[:items] ||= []
+  r[:items].push( item )
+  #STDERR.puts "deployed property name=#{name} value=#{value.inspect}"
+  r
+end
+
+
+for k in obj[:later] do
+  name = k[0]
+  func = k[1]
+  params = k[2]
+  item = {:tag => :object, :type => "DeferredCalc", :items => 
+        [
+         { :tag => :property_set, :name => "targetProperty", :value => "\"#{name}\"" },
+         { :tag => :property_set, :name => "func", :value => "#{func}" },
+         { :tag => :property_set, :name => "params", :value => "[#{params.join(',')}]" }
+        ] }
+  deploy_qml_item( ctx.obj, item )
+end

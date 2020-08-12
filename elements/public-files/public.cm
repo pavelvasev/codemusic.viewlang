@@ -1,0 +1,25 @@
+##### scene.rb priority=-5 @add_import_public
+`` лучше все-таки к сцене, т.к. если код не использует сцену - то и нефиг там импорт вставлять..
+ctx.r = [ {:tag => :expression, :value => "import \"./public\"\n\n"} ].concat( [ctx.r] )
+`` наверное надо сделать тег prepend какой-то
+require 'fileutils'
+src=File.join(ELEMENTS_DIR,"public.src")
+tgt=File.join(TARGET_DIR,"public")
+tgt_bak=File.join(TARGET_DIR,"public.bak")
+# ну идея такая что бак мы сделаем в любом случае
+# а потом закопируем из либы плюс может из проекта
+ctx.machine.log "copy public files: #{src} -> #{tgt}" do
+  FileUtils.rm_r( tgt_bak,:force => true)
+  FileUtils.cp_r( tgt,tgt_bak ) if File.exist?( tgt )
+  FileUtils.rm_r( tgt,:force => true)
+  FileUtils.cp_r( src,tgt )
+end
+
+src=File.expand_path( "./public.src" )
+if File.exist?(src)
+  ctx.machine.log "copy local public files: #{src} -> #{tgt}" do
+    FileUtils.cp_r( src + "/.",tgt )
+  end
+else
+  ctx.machine.log "local public files not exist: {src}"
+end

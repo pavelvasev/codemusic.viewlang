@@ -1,0 +1,26 @@
+`` Нам надо иметь список добавок, добавленных в сцену
+`` Чо с этим списком делать - проблемы негров. Например vis-объекты должны находить в них себе шейдеры/
+`` Другие - еще что-нибудь делать, не знаю что.
+`` Это, надо заметить, рантайм-добавки.
+
+#### extras.rb
+ctx.r = []
+
+#### scene.rb
+#k = ctx.machine.compute( :extras, [], "scene-extras" )
+ctx.r[:items].push({ :tag => :expression, :value => "/////////////// runtime extras!\n" })
+deploy_property( ctx.r, "external_extras_manager", "new Object({output:[]})",:property )
+deploy_property( ctx.r, "local_extras_manager", "new Object({output:[]})",:property )
+deploy_property( ctx.r, "final_extras_arr", "external_extras_manager.output.concat( local_extras_manager.output )",:property )
+`` todo навести красоту - шобы это в голову шло, поближе к началу сцены
+
+#### scene.rb @add_extras_manager
+local_manager = { :tag => :object, :type => "ExtrasManager", :id => "obj_extras_manager" }
+deploy_property( local_manager, "title", "scene_obj.isRoot ? 'Добавки' : scene_obj.text+'&nbsp;-&nbsp;Добавки'" )
+
+manager_items = ctx.machine.compute( :extras, [], "compute-extras" )
+#if manager_items.is_a?(Array)
+deploy_property( local_manager, "input_1", manager_items.inspect )
+
+deploy_property( ctx.r, "local_extras_manager", "obj_extras_manager",:property )
+deploy_qml_item( ctx.r, local_manager )

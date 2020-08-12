@@ -1,0 +1,27 @@
+`` вообще вопрос, я вот хочу чтобы был метод console.log
+`` но поля с этим противоречат, а точнее их синтаксический доступ
+`` и с этим надо что-то делать...
+
+`` меня это смущает - буду пока просто log вызывать и все
+
+#### console
+<field>
+  <col name="log">
+    <console_log><tdata/></console_log>
+  </col>
+</field>
+
+#### console_log.txt
+function () {
+  for (var i=0; i<arguments.length; i++)
+    console.log(arguments[i]);
+  return arguments;
+}
+
+
+#### log.txt
+function () {
+  for (var i=0; i<arguments.length; i++)
+    console.log(arguments[i]);
+  return arguments;
+}

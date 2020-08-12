@@ -1,0 +1,36 @@
+#################################### field.rb @field_cache_check prepend=true priority=5
+ctx.machine.log "field-cache called."
+
+# у нас теперь стек машин - надо изучить их имена
+def machines_chain_name( machine )
+  return "" if machine.nil?
+  if machine.parent_machine
+     machines_chain_name( machine.parent_machine ) + "." + machine.name
+  else
+     machine.name
+  end
+end
+
+name = (obj[:names_stack] || [obj[:name]]).last
+if !name
+  ctx.machine.log "field-cache: no name"
+  return
+end
+
+full_name = machines_chain_name(ctx.machine) + ".#{name}"
+@fields_cache ||= {}
+
+if @fields_cache[ full_name ]
+  ctx.r = @fields_cache[ full_name ]
+  ctx.stop = "field from cache (key=#{full_name})"
+  ctx.machine.log "field-cache: field loaded from cache with key: #{full_name}"
+  return
+end
+
+
+########################################## field.rb @field_cache_save priority=-5
+if ctx.r.respond_to?(:compute)
+  full_name = machines_chain_name(ctx.machine) + ".#{ctx.r.name}"
+  @fields_cache[ full_name ] = ctx.r
+  ctx.machine.log "field-cache-save: field saved to cache with key: #{full_name}"
+end

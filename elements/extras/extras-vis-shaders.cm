@@ -1,0 +1,19 @@
+``` предназначение - добавить всем vis-объектам шейдеров из final_extras
+
+#### vis.rb append=true priority=-1
+def find_property( r,name )
+  (r[:items] || []).find{ |item| item.is_a?(Hash) && (item[:tag] == :property_set || item[:tag] == :property ) && item[:name] == name }
+end
+
+t = ctx.r
+if t.is_a?(Hash) && t[:tag]
+  s = find_property( t,"shader" ) || begin
+    deploy_property( t,"shader",[] )
+    find_property( t,"shader" )
+  end
+#  STDERR.puts "t=#{t}"
+#  STDERR.puts "s=#{s}"
+#  STDERR.puts "sv=#{s[:value]}"
+  s[:value] = s[:value].concat([{:tag => :expression, :value => "final_extras_arr"}])
+  # конечно вопрос - какой порядок. ну пока местное + внешнее. а там посмотрим.
+end

@@ -1,0 +1,45 @@
+##### vis.rb [points]
+set_type( ctx.r, "Points")
+deploy_property( ctx.r, "positions","combine_arrays( input_0, input_1, input_2 )" )
+
+##### vis.rb [spheres]
+set_type( ctx.r, "Spheres")
+deploy_property( ctx.r, "positions","combine_arrays( input_0, input_1, input_2 )" )
+
+##### vis.rb [lines]
+ctx.r[:type] = "Lines"
+ctx.r[:items] ||= []
+ctx.r[:items].push( { :tag => :property_set, :name => "positions", :value => "combine_arrays( input_0, input_1, input_2, input_3, input_4, input_5 )"})
+
+##### vis.rb [linestrip]
+set_type( ctx.r, "Linestrip")
+deploy_property( ctx.r, "positions","combine_arrays( input_0, input_1, input_2 )" )
+
+##### vis.rb [cylinders]
+set_type( ctx.r, "Cylinders")
+deploy_property( ctx.r, "positions","combine_arrays( input_0, input_1, input_2, input_3, input_4, input_5 )" )
+
+##### vis.rb [cstrip]
+set_type( ctx.r, "Cylinderstrip")
+deploy_property( ctx.r, "positions","combine_arrays( input_0, input_1, input_2 )" )
+
+##### vis.rb [creative_points]
+set_type( ctx.r, "CreativePoints")
+deploy_property( ctx.r, "positions","combine_arrays( input_0, input_1, input_2 )" )
+deploy_property( ctx.r, "text","scene_obj.text+' - точки'")
+
+##### vis.rb [creative_lines]
+set_type( ctx.r, "CreativeLines")
+deploy_property( ctx.r, "positions","combine_arrays( input_0, input_1, input_2, input_3, input_4, input_5 )" )
+deploy_property( ctx.r, "text","scene_obj.text+' - линии'")
+
+##### vis.rb [creative_mesh]
+set_type( ctx.r, "CreativeTrimesh")
+deploy_property( ctx.r, "text","scene_obj.text+' - поверхность'")
+if ctx.input.length >= 3
+  deploy_property( ctx.r, "positions","combine_arrays( input_0, input_1, input_2 )" )
+elsif ctx.input.length == 1
+  # вот так то.. продолжаю вписываться.. фичи в код вписывать
+  # итак это случай когда дали один массив.. не охота рекомбинировать оное..
+  deploy_property( ctx.r, "positions","input_0" )
+end  

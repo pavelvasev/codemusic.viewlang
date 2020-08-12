@@ -1,0 +1,60 @@
+##### vis.rb [colors] @vis_colors
+deploy_property( ctx.r, "colors",obj[:colors] )
+
+##### vis.rb [color]
+deploy_property( ctx.r, "colors",obj[:color] )
+
+##### vis.rb [radius]
+deploy_property( ctx.r, "radius",obj[:radius] )
+
+##### vis.rb [radiuses]
+deploy_property( ctx.r, "radiuses",obj[:radiuses] )
+
+##### vis.rb [visible]
+deploy_property( ctx.r, "visible",obj[:visible] )
+
+##### vis.rb [flat]
+deploy_property( ctx.r, "flat",obj[:flat] )
+
+##### vis.rb [scale]
+deploy_property( ctx.r, "scale",obj[:scale] )
+
+##### vis.rb [indices]
+deploy_property( ctx.r, "indices",obj[:indices] )
+
+##### vis.rb [normals]
+deploy_property( ctx.r, "normals",obj[:normals] )
+
+
+```
+/*
+#### vis [colors]
+<deploy_property name="colors">
+  <attr name="value">
+    <obj attr="colors"/>
+  </attr>
+</deploy_property>
+*/
+
+/* на будущее, чисто по приколу.. set_attr и deploy_property это модификаторы результата..
+##### vis.rb [points]
+<group>
+  <set_attr name="type" value="Points"/>
+  <deploy_property name="positions" value="combine_arrays( input_0, input_1, input_2 )"/>
+</group>
+*/
+
+/*
+##### vis.rb [lines]
+settype("Lines")
+deploy_property( "positions","combine_arrays( input_0, input_1, input_2,input_3, input_4, input_5 )" )
+ну или так..
+*/
+
+/*
+##### vis.rb [points]
+ctx.r[:type] = "Lines"
+ctx.r[:items] ||= []
+ctx.r[:items].push( { :tag => :property_set, :name => "positions", :value => "combine_arrays( input_0, input_1, input_2 )"})
+*/
+```

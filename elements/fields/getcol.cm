@@ -1,0 +1,27 @@
+`` приоритет 7 чтобы еще до синглтонов работало (блин, каких, полевых? тогда правильно)
+`` но вообще треш эти приоритеты.. надо какую-то таблицу заводить
+`` по аналогии с сигналами в системах для подводных лодок
+####### getcol.rb prepend=true priority=7 @fix_elem_name
+elemname = ctx.input[1] `` это нам конечно вызывает вычисление всего инпута.. ну и ладно
+if elemname.is_a?(String) && elemname =~ /['"](.+)['"]/
+  ctx.input[1] = $1
+end
+
+####### getcol.rb!
+#ctx.machine.log "I am get col. My input1 is: #{ctx.input[1]}"
+#ctx.machine.log "I am get col. My tree_input is: #{ctx.tree_input}. My input is: #{ctx.input}"
+# наш правильный вход в getcol - input содержит поле и имя компоненты, а tree_input - аргументы к этой всей истории.. 
+# (на уровне синтаксического вызова).. но можно конечно наверное и в обычный input это подавать..
+
+`` аргументы - поле и имя элемента
+field = ctx.input[0]
+elemname = ctx.input[1].to_sym
+
+ctx.machine.log "getcol: elemname=#{elemname}, field=#{field}"
+
+if field.respond_to?(:compute)
+  kod = DasParseXml.transfer_attrs_to_top_node( ctx.obj, {:tag => elemname} ) # вот такая вот карявка чтобы учеть аттрибуты входные
+  STDERR.puts "TTTTTT ctx[:tree_input]=#{ctx[:tree_input]}"
+  kod[:getcol_invokation] = true # спецфлаг для дефлот-метода
+  ctx.r = field.compute( kod, ctx[:tree_input], "getcol" )
+end

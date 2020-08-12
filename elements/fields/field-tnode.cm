@@ -1,0 +1,12 @@
+####### field.rb @field_add_tnode_col
+field = ctx.r
+
+field.state[:f_node] = ctx.obj
+
+# если делать без привязки к getcol, то выходит ерунда - эта штука заменяет обычную tdata
+# а обычная tdata работает по другим входам совсем
+
+field.add_code :tnode_for_field, lambda { |ctx_f|
+  ctx_f.r = field.state[:f_node]
+}
+field.add_cond [:tnode,:getcol_invokation], :tnode_for_field

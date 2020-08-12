@@ -1,0 +1,10 @@
+#### getfilepath.txt
+function (str) {
+  return str.substring(0,str.lastIndexOf('/')+1);
+}
+
+#### getfilename.txt
+function (str) {
+  if (!str.substring) return "";
+  return str.substring(str.lastIndexOf('/')+1);
+}

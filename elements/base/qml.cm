@@ -1,0 +1,53 @@
+`` конструкции qml-я для е-языка
+
+#### object.rb!=
+qobj = ctx.obj.dup
+qobj.delete( :items )
+qobj[:type] ||= "Item"
+qobj[:items] = ctx.input
+qobj
+
+=begin
+{ :tag => :object,
+  :type => (ctx.obj[:type] || "Item"),
+  :items => ctx.input,
+  :comment => ctx.obj[:comment],
+  :id => ctx.obj[:id]
+}
+`` вообще, может просто dup делать уже да и все?
+=end
+
+#### property.rb!=
+ctx.machine.log "prop assign ctx.input=#{ctx.input}"
+{ :tag => :property,
+  :name => ctx.obj[:name],
+  :value => obj[:value] || ctx.input[0]
+#  :value => obj[:value] || (ctx.input[0].is_a?(Array) ? ctx.input[0].dup : ctx.input[0]) # было ctx.input - но это массив ведь.. а нам надо значение.. поэтому input[0]
+}
+
+#### property_set.rb!=
+{ :tag => :property_set,
+  :name => ctx.obj[:name],
+  :value => obj[:value] || ctx.input[0]
+}
+
+#### func.rb!=
+b = ctx.input
+if b[-1].is_a?(String) && b[-1] !~ /return/
+  b[-1] = [{:tag => :expression, :expression => "return ", :items => [b[-1].dup]}]
+end
+
+{ :tag => :func, 
+  :name => ctx.obj[:name],
+  :items => b
+}
+
+```
+##### object ??
+<tag name="object" type="{{obj.type || 'Item'}}">
+  <tdata/>
+</tag>
+```
+
+#### #cdata-section.rb!=
+obj[:text]

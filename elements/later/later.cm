@@ -1,0 +1,75 @@
+
+#### main.rb prepend=true
+def find_qml_property( obj, name )
+  name = name.strip
+  if obj.nil? || !obj[:items].is_a?(Array)
+    return
+  end
+  rec = obj[:items].detect{ |rec| 
+    # STDERR.puts "AHTUNG: rec=#{rec.inspect}" if !rec.is_a?(Hash) 
+    rec = rec[0] if rec.is_a?(Array)
+    (rec[:tag] == :property || rec[:tag] == :property_set) && rec[:name] == name 
+  }
+  rec = rec[0] if rec.is_a?(Array)
+  rec
+end
+
+def das_track_deferred( ctx, name )
+if ctx.r.is_a?(Hash) && ctx.r[:tag] == :object
+  found = find_qml_property( ctx.r, name )
+  if found
+#    STDERR.puts "EE found=#{found}"
+    if !found[:value].is_a?(String)
+      STDERR.puts "no string"    
+      return
+    end # там нам строки подавай
+    
+    sk = found[:value].split("(")
+    if sk.length < 2 # может там и не скобка
+#      STDERR.puts "no skobka"
+      return
+    end
+    
+    func = sk[0];
+    params = sk[1].split(")")[0].split(",").map { |pname| pname.strip }
+    params_using_output = 0
+    for p in params do
+#      STDERR.puts "UUUU = #{p.inspect}"
+      pfound = find_qml_property( ctx.r, p )
+#      STDERR.puts "found=#{pfound}"
+      if pfound && pfound[:value]
+        v = pfound[:value]
+        if v.is_a?(Hash) 
+          if v[:tag] == :expression && v[:value]  =~ /\.output/
+            # val val это expression там
+            params_using_output = params_using_output+1
+          elsif v[:tag] == :object
+            params_using_output = params_using_output+1
+          end
+        elsif v.is_a?(String) && v =~ /\.output/
+          params_using_output = params_using_output+1
+        end
+      end
+    end
+#    STDERR.puts "params_using_output=#{params_using_output}"
+    if params_using_output > 1
+      ctx.r[:later] ||= []
+      params = params.map{ |pname| "parent.#{pname}" }
+      ctx.r[:later].push( [ name, func, params ] )
+      found[:value] = "[]"
+    end
+  end
+end
+
+end
+
+
+###### auto_qml_obj.rb append=true priority=-5
+das_track_deferred( ctx,"output" )
+
+###### vis.rb append=true priority=-5
+# STDERR.puts "JJJ VIS, r=#{ctx.r}"
+das_track_deferred( ctx,"positions" )
+das_track_deferred( ctx,"colors" )
+das_track_deferred( ctx,"indices" )
+das_track_deferred( ctx,"radiuses" )

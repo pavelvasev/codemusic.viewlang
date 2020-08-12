@@ -1,0 +1,45 @@
+```
+  Великая мудрость any
+  заключается в том, что в any мы приходим в случаях:
+  1. Кто-то вызвал извне метод поля, которого нет, и нам и правда надо обработать его в any-стиле,
+     например если у нас есть такая колонка
+  2. Мы изнутри поля хотим поюзать знания верхних полей.
+  
+  Как мне видится сейчас, логика должна быть следующая.
+  1. Если произошел вызов явный у этого поля - через fieldname.a или через this.a - это это повод обратиться к колонке any
+  2. В противном случае это повод пойти наверх.
+  Ну потом может уточнить придется.
+  
+  Короче новая идея такая. Пусть getcol маркирует вызовы. Если ихоновый - окей. Если нет - пошли наверх.
+```
+
+####### field.rb @field_add_any_redirect
+field = ctx.r
+field.add_cond :default_method,:any_body
+
+field.add_code :any_body, lambda { |ctx|
+#  вроде как все проверки эти не нужны = дефолт метод вызывается когда надо
+#  return if ctx.r_assigned? # хотя странно это все.. может лучше такое правило
+#  STDERR.puts "ctx[:code_track]=#{ctx[:code_track].inspect}"
+
+#  return if ctx[:code_track].length != 2 # только для верхнего уровня.. 2 означает видимо что есть верх, а есть вот эта
+  if ctx.obj[:tag] == :any # нефиг на эни вызывать эни
+    #field.log "any inside any - exiting"
+    #field.log "seems no any column found - just exiting"
+    ##raise "Field column computation returned no results! column=#{ctx.input[0][:desired_name]}, field=#{field.name}"
+    ctx.r = :value_not_found
+    return
+  end
+  
+  if ctx.obj[:getcol_invokation]
+    field.log "any_body: case 1, getcol_invokation"
+    body = { :tag => :any, :singletone_key => "any_#{ctx.obj[:tag]}", :desired_name => ctx.obj[:tag] }
+    ctx.r = field.compute( body, [ctx.obj[:tag]], "field-any" ) # перекинули имя на вход
+  else
+    field.log "any_body: case 2, passing to parent"
+    # просто кто-то написал какую-то букву.. значение которой вероятно задано в верхних полях
+    obj = ctx.obj.dup
+    obj[:items_machine] = field
+    ctx.r = field.parent_machine.compute( obj, ctx[:tree_input], "field-parent-jump" )
+  end
+}

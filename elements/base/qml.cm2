@@ -1,0 +1,74 @@
+`` генератор, понимаешь, qml-ля
+
+#### object.rb prepend=true @assign_id
+ctx.machine.state[:ruby_object_counter] ||= 0
+if obj[:id].nil?
+   obj[:id] = "obj_#{ctx.machine.state[:ruby_object_counter]}"
+   ctx.machine.state[:ruby_object_counter] = ctx.machine.state[:ruby_object_counter]+1
+end
+
+#### object.txt.erb!
+<% ctx.machine.state[:padding] = (ctx.machine.state[:padding] || 0)+1 %>
+<% def addpadding( arr )
+     r = arr.join("\n").split("\n").map do |line|
+       k = 1 #ctx.machine.state[:padding]
+       (" " * 4 * k) + line
+     end
+     #r.select{ |line| line.strip.length > 0 }
+   end
+   def remove_blank_lines(arr)
+     prevblank = true
+     arr.select{ |line|
+       thisblank = (line.strip.length == 0)
+       res = !(thisblank && prevblank)
+       prevblank = thisblank
+       res
+     }
+   end
+   def add_blank(str)
+     return str if str.length == 0
+     "\n\n"+str
+   end
+   
+%><%= obj[:type] || "Item" %> {
+    <%= "\/\/#{obj[:comment]}" if obj[:comment] %>
+    id: <%= obj[:id] %>
+<%= add_blank remove_blank_lines( addpadding( ctx.input ) ).join("\n") %>
+<%= add_blank remove_blank_lines( addpadding( obj[:xtra_items]||[] ) ).join("\n")  %>
+
+}
+<% ctx.machine.state[:padding] = ctx.machine.state[:padding]-1 %>
+
+#### property.txt.erb!
+<% def to_sq(v) 
+  #v = ctx.machine.compute( v, [], "qml.cm2:property_set_II" )
+  if v.is_a?(Array)
+    "[" + v.join(",") + "]"
+  else
+    v.to_s
+  end
+ end %>property var <%= obj[:name] %>: <%= to_sq( ctx.machine.compute( obj[:value], [],"qml.cm2:property" ) ) %>
+
+#### property_set.txt.erb!
+<% def to_sq(v) `` смысл тут в том, что если вернули массив строк - то на самом деле там не строки, а идентификаторы
+  #v = ctx.machine.compute( v, [], "qml.cm2:property_set_II" )
+  if v.is_a?(Array)
+    "[" + v.join(",") + "]"
+  else
+    v.to_s
+  end
+ end %><%= obj[:name] %>: <%= to_sq( ctx.machine.compute( obj[:value], [],"qml.cm2:property_set" ) ) %>
+
+#### func.txt.erb!
+function <%= obj[:name] %> () {
+  <%= ctx.input.join("\n") %>
+}
+
+#### #cdata-section.rb!=
+obj[:text]
+
+#### expression.txt.erb!
+<%= ctx.machine.compute( obj[:value],[],"qml.cm2:expression") %>
+
+#### qmlarray.txt.erb!
+<%= obj[:value].inspect %>

@@ -1,0 +1,19 @@
+### nummul.txt
+function (a,b) {
+  return a*b;
+}
+
+### numdiv.txt
+function (a,b) {
+  return a/b;
+}
+
+### numadd.txt
+function (a,b) {
+  return a+b;
+}
+
+### nummin.txt
+function (a,b) {
+  return a-b;
+}

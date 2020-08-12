@@ -1,0 +1,32 @@
+```
+ Мы конечно молодцы, наделали параметров
+ Но теперь нам надо уметь сценой по внешнему API управлять
+ А для этого нам надо выставить эти параметры наружу (сейчас это не сделано)
+ 
+ Варианты разные есть.
+ Например можно накопить все параметры, а потом создать функцию setParamValue..
+ Но пока мне кажется - проще - сделать тупо ссылки на эти параметры
+ 
+```
+###### param.rb priority=-5
+param_obj = ctx.r
+n1 = convert_data_name( ctx, obj[:name] )
+n2 = n1.gsub("emachine_","")
+po = { :tag => :property, :name => "#{n2}", :value => "param_#{n1}" }
+# по уму тут надо алиасы, ну да ладно пока
+
+@collected_params ||= []
+@collected_params.push po
+
+###### scene.rb @add_params_api priority=1
+
+if @collected_params
+  # наверх добавим, для красоты
+  
+  ctx.r[:items].unshift "\n///////////////// params api done\n"
+  ctx.r[:items].unshift @collected_params
+  ctx.r[:items].unshift "\n///////////////// params api\n"
+  
+#  deploy_qml_item( ctx.r, "\n///////////////// params api\n" )
+#  deploy_qml_item( ctx.r, @collected_params )
+end

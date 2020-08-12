@@ -1,0 +1,23 @@
+`` генерирует набор фильтров шейдера
+`` вход: 
+``   maxz-значение (переделать на аттрибут?)
+``   time-значение
+`` todo - maxz, time перевести на атрибуты, вход использовать для списка шейдеров например
+### shader_konv
+<object type="ShaderConfig" xtract_from_property="true">
+  <computing_mode>
+    <property_set name="cliprange">
+      <tdata get="0"/>
+    </property_set>
+    <property_set name="timevalue">
+      <tdata get="1"/>
+    </property_set>
+    <property_set name="enabled" value="scene_obj.isRoot">
+    </property_set>
+    <property_set name="visible" value="scene_obj.isRoot">
+    </property_set>
+  </computing_mode>
+</object>
+
+### shader_konv.rb [name]
+ctx.r[:id] = convert_data_name( ctx, ctx.obj[:name] )

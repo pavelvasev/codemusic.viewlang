@@ -1,0 +1,111 @@
+```
+  Вот хорошо, пример создания шейдера.
+  
+  Вход: 3 агрумента - параметры (список), код вершин, код пикселей
+  
+  Фишки
+  1. Приписывается main и {}. Сообразно до этого можно использовать наши любимые методы соединения текстов.
+  2. Анализируется секция params и его параметры прокидываются как uniform float в шейдеры - можно использовать.
+
+  Вопросы: а как бы мне в шейдер передавать результаты вычисления из сцены вообще? (морфизмов сцены, и в частности - внешних параметров)
+  напрашивается секция vars по аналогии с Денисом. И в принципе даже ничего плохого в этом дублировании нет.
+  Ну да. Это как бы как vars, только правильнее наверное binds.
+  
+  Наверное это будет todo, когда шейдеры мне реально понадобятся. Сделать вот vars, и передавать я не знаю так - параметры, варсы, верш, пикс.
+  Ну или сделать уже полевой make_shader_f и он у поля будет запрашивать чего хотел.
+```
+
+#### make_shader.rb!
+params = ctx.input[0]
+vertex = ctx.input[1]
+pixel = ctx.input[2]
+
+res = { :tag => :object, :type => "Shader", :xtract_from_property => "true", :items => [] }
+
+res[:items].push params
+
+vertex_code = vertex.is_a?(Array) ? vertex.join("\n") : vertex
+pixel_code = pixel.is_a?(Array) ? pixel.join("\n") : pixel
+
+#STDERR.puts "bebe params=#{params.inspect}"
+
+if vertex_code !~ /void\smain/
+  vertex_code = "void main() {\n#{vertex_code}\n}"
+end
+if pixel_code !~ /void\smain/
+  pixel_code = "void main() {\n#{pixel_code}\n}"
+end
+
+for k in params do
+  next if !k.is_a?(Hash)
+  nam = k[ :names_stack ] ? k[:names_stack].last : k[:name]
+  if nam
+    vertex_code = "uniform float #{nam};\n#{vertex_code}"
+    pixel_code = "uniform float #{nam};\n#{pixel_code}"
+    if k[:tag] != :property
+      prop = { :tag => :property, :name => nam, :value => "#{k[:id]}.val" }
+      res[:items].push prop
+    end
+  end
+end
+nam = "sceneTime"
+    vertex_code = "uniform float #{nam};\n#{vertex_code}"
+    pixel_code = "uniform float #{nam};\n#{pixel_code}"
+    
+
+vertex_p = { :tag => :property_set, :name => "vertex", :value => "\"#{vertex_code}\"" }
+pixel_p = { :tag => :property_set, :name => "fragment", :value => "\"#{pixel_code}\"" }
+
+res[:items].push vertex_p
+res[:items].push pixel_p
+
+@shaders_counter ||= 0
+res[:id] = "make_shader_res_#{@shaders_counter=@shaders_counter+1}"
+extra_p = { :tag => :property, :name => "output", :value => res[:id] }
+res[:items].push extra_p
+
+ctx.r = res
+
+`` пример использования
+```
+#### s2
+<make_shader>
+  <group>
+    <param name="a"/>
+    <param name="b"/>
+  </group>
+  <value>
+      void main() {
+      gl_Position.x = gl_Position.x + a;
+      gl_Position.y = mod( sceneTime, 5.0);
+    }
+  </value>
+  <value>
+    gl_FragColor.r = b / 100.0;
+    gl_FragColor.g = mod( sceneTime,3.0 ) / 3.0;
+  </value>
+</make_shader>
+
+#### a.json
+[1,2,3,4,5]
+#### b.json
+[5,4,3,2,1]
+
+### visual
+<group>
+  <vis spheres="1">
+    <a/> <b/> <value/>
+    <attr name="shaders">
+      <s2/>
+    </attr>
+  </vis>
+  
+  <vis lines="1">
+    <a/> <b/> <value/>
+    <a/> <b/> <value/>
+    <attr name="shaders">
+      <s2/>
+    </attr>
+  </vis>
+</group>
+```

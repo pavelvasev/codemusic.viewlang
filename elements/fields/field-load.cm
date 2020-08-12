@@ -1,0 +1,55 @@
+```
+### Q
+<load> alfa.cm </load>
+
+### K
+<load> combined/*.cm </load> -- должно смержить
+
+### children?
+<group>
+  <load name="A"> alfa.cm </load>
+  <load name="B"> beta.cm </load>
+</group>
+
+### children?
+<group>
+  <Q radius="5"> <V.x/> <V.y/> <V.z/> </Q>
+  <K> <V.colors </K>
+</group>
+
+что я хочу вообще?... ну я хочу загружать поля из внешних файлов.. почему нет..
+и еще я захочу как-то им передавать туда входные данные возможно.
+а в целом - это чтобы потом я мог и основную сцену также загрузить, и вытащить из нее visual, setup и прочая
+
+```
+
+``` прямой подход - дык этак мне все колонки переопределять..
+####### load.rb @field_load
+
+mm = ctx.machine.top_machine
+fi = CombiningMachine.new( ctx.machine )
+origm = mm.parser
+mm.parser.machine = fi
+mm.parser.parse( "include #{ctx.obj[:src]}","field_load" )
+mm.parser.machine = origm
+
+ctx.r = fi
+
+# нда.. а tdata как бы этому fi передать?
+```
+
+####### load
+<field>
+  <include> <attr name="src"> <this.tnode.src/> </attr> </include>
+</field>
+
+###### include.rb!
+STDERR.puts "include called"
+STDERR.puts "src is #{ctx.obj[:src]}"
+mm = ctx.machine.top_machine
+origm = mm.parser.machine
+mm.parser.machine = ctx.machine
+mm.parser.parse( "include #{ctx.obj[:src]}","field-include" )
+mm.parser.machine = origm
+
+ctx.stop = "include complete"

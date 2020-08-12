@@ -1,0 +1,48 @@
+####### field.rb! @field_constructor
+ctx.machine.log "field.rb called. obj=#{obj.inspect}"
+
+name = (obj[:names_stack] || [obj[:name]]).last
+raise "field name cannot be blank (still unsupported)!" if name.nil? || name.length == 0
+
+field_machine = CombiningMachine.new( ctx.machine )
+field_machine.name = name
+
+#lp = LetterParser.new( field_machine )
+#lp.parse( "include {.,#{SYSTEM_DIR}}/elements/**/*.cm" )
+#field_machine.compute( obj[:items], ctx[:tree_input],"field-init" )
+
+
+ctx.machine.log "field contructed. name=#{field_machine.name}"
+#ctx.machine.log "field constructed. name=#{obj[:name]}, columns len=#{field_object[:col_array].length}"
+#ctx.machine.log "column names=#{field_object[:col_names].keys.inspect}"
+#ctx.machine.log "upper_field=#{field_object[:upper_field]}"
+ctx.r = field_machine
+
+###### field.rb priority=-8 @field_load_body
+field_machine = ctx.r
+field_machine.compute( obj[:items], ctx[:tree_input],"field-init" )
+
+####### col.rb! @col
+field = ctx.machine
+#raise "col kriminal!" if field == ctx.machine.top_machine # а почему криминал кстати?
+
+# мой любимый трюк с группами
+# хотя нужен ли он теперь? ну там будет массив вычислений да и все..
+# группа же нам ничего такого не создает особо..
+colbody = if obj[:items].length == 1 && obj[:items][0].is_a?(Hash)
+  obj[:items][0].dup
+else
+  { :tag => :group, :items => obj[:items] } # name?
+end
+
+field.add_code( obj[:name].to_sym, lambda { |ctx| 
+  # field.compute_in_context( colbody ) # ну пожалуй да, чего плодить лишние контексты
+  # если не плодим контексты - у нас сыпится синтактик-гет
+  ctx.r = field.compute( colbody, ctx[:input], "col-body" )
+} )
+
+ctx.stop=1
+
+# это я не понял покамест
+#colbody[ "col_body_#{obj[:name]}".to_sym ] = 1 if obj[:name] # дополнительно - это нам надо чтобы ловить col_body_any
+# todo - col_index еще сделать.. ну шоб по номерам еще коды были.. ну ладно пока..

@@ -1,0 +1,60 @@
+`` вход - урль файла или объект файла (dom api)
+`` выход - объект, имеющий поле output
+
+`` тонкость со вставкой строки.. но можно по идее обратно в xml превратить,
+`` но мне лениво поэтому я переделал xml.erb просто в rb
+
+`` еще косяк что тут все в resolved гонят, а правильно бы только первый, ибо второй у нас это payload
+`` ну да ладно пока
+############# load_file.rb!
+res = { :tag => :object, :type => "TextLoader2", :xtract_from_property => true }
+acc = []
+ctx.input.each.with_index do |v,index|
+  code = { :tag => :computing_mode, 
+           :items => [ 
+              { :tag => :property, :name => "input_#{index}", 
+                 :items => [ { :tag => :resolved, :items => [{ :tag => :pass_value, :value => v}] } ]
+              } ]
+         }
+  r = ctx.machine.compute code, [], "load-file-input-#{index}"
+  # рыба заключается в том, v - это уже вычисленный результат
+  # а мы его опять передадим на вычисление
+  # поэтому надо его заключить в pass_value
+  acc.push r
+end
+res[:items] = acc
+ctx.r = res
+
+############# resolved.txt!
+function (u) {
+  if (Array.isArray(u)) return Qt.resolvedUrl( u[0] );
+  `` todo может map лучше
+ return Qt.resolvedUrl( u );
+}
+
+############ unquote.rb!
+ctx.machine.log "unquote obj inp0=#{ctx.input[0]}"
+hmm = eval( ctx.input[0] )
+ctx.machine.log "unqote result=#{hmm}"
+ctx.r = hmm
+
+``` это стаоре
+############# load_file.erb!
+<object type="TextLoader2" xtract_from_property="true">
+  <computing_mode>
+  <% ctx.input.each.with_index do |v,index| %>
+    <property name="input_<%=index%>">
+      <resolved>
+        <unquote>.
+        `` v у нас может быть любое выражение.. а мы его тут в текст.. и это наша робкая попытка превращить обратно в выражение..
+        `` но зато блин если там тупо строка, то получается ерунда - мы с нее кавычки снимем..
+<![CDATA[
+          <%= v %>
+]]>
+        </unquote>
+      </resolved>
+    </property>
+  <% end %>
+  </computing_mode>
+</object>
+```

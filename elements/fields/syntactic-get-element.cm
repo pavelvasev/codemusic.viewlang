@@ -1,0 +1,75 @@
+`` задача - хотим уметь писать a.b.c.d и это означает поэтапное обращение к компонентам
+
+`` хитрый момент! я это реализую путем добавки unwind_dotted_access-алгоритма ко всем конвейерам вообще!
+`` и мы останавливаем обработку (см ctx.stop=true) если встречаем наш случай
+`` и оказалось, что это начинает цепляться и к рабочим узлам типа tree_items_to_input
+`` а посольку на вершине обработки, в переменной ctx.obj, все-равно сидит исходных объект
+`` то мы начинали срабатывать еще до tree_items_to_input и таким образом глушили его работу
+`` поэтому добавлена особая проверка -- if ctx[:code_track].length == 2 
+`` да и вообще поэтому запрограммирован code_track, так он и не нужен был пока даже.
+
+##### .rb prepend=true priority=10 @syntactic_dots_to_getcol
+# раньше это называлось unwind_dotted_access
+# STDERR.puts "qq=#{ctx[:code_track].length}"
+if ctx[:code_track].length == 2 
+  # только для второго уровня - т.е. unwind_dotted_access работающий только сразу следом 
+  # на уровне реакции на вызванный код.. (в контексте compute) но не на более глубоких уровнях, типа реакции на tree_items_to_input
+  req = ctx[:code_track][-2][:tag].to_s  
+  #req = obj[:tag].to_s - раньше было так и это была неправильная реакция
+  # но кстати а почему она неправильная то? уж я и не помню... блин фичи-требования надо выписывать!!!
+  rs = req.split(".")
+  if rs.length > 1
+    `` наш случай
+    `` ща построим
+    
+    code = { :tag => rs[0].to_sym, :ordinal => true } 
+    # ordinal активирует нам синглтон-проверки (обычные)
+    # это потребовалось в момент когда я стал getcol учить доступу к обычным хешам..
+    # хотя возможно тут надо другое что-то написать.. не ordinal.. особое..
+    i = 1
+    while i < rs.length
+      code = { :tag => :getcol, :items => [ code, rs[i] ] }
+      i=i+1
+    end
+    code[:singletone_key] = rs[-1] # это тоже активирует синглтоны..
+    
+    `` хитрость - надо в код теперь запихнуть аттрибуты вызова! причем в самый верхний - где колонку последнюю будут считывать
+    `` ибо аргументы то мы ведь передаем, а аттрибуты до сих забывали
+    DasParseXml.transfer_attrs_to_top_node( ctx[:code_track][-2], code )
+  
+    ctx.machine.log "syntactic-get: generated code=#{code.inspect}"
+    # ctx.machine.log "syncactic-get. going to call code. my input is: #{ctx.input}"
+    # так, выяснено пробным путем, что это - правильный инпут
+
+    # вот. синтактик не должен передавать свой инпут всегда
+    # он должен разбираться уметь, он должен передавать только инпут, состоящий из своих items
+    # в противном случае это превращается в ситуацию, когда синглтоны не могут понять,
+    # у них там что - есть поддерево, подающее аргументы в a.b.c.d, и тогда синглтон не надо,
+    # или это просто приехали верхние аргументы. Вот. На тех слоях возникает путаница.
+    # ну либо будет вариант что синглтоны должны будут ходить на контекст вверх и смотреть, 
+    # а не синтактик ли там наверху, и если он, то какие его items? ну ерунда вроде..
+    # поэтому пока будем передавать только инпут, основанный на items
+    # проблема только такая, что тогда теряется функционал tdata, ну да БОГ с ним
+    # orig: ctx.r = ctx.machine.compute code, ctx[:input], "syntactic-get"
+    # update: Нет не Бог с ним. Потому что мне стало хотеться tdata.0 писать!
+#    STDERR.puts "TTTTTTT2. gonna dedice on input for getcol"
+#    STDERR.puts ctx[:request][:items].inspect
+#    STDERR.puts 'rq is'
+#    STDERR.puts ctx[:request].inspect
+    input_for_getcol = if ctx[:request][:items]
+        lambda{ ctx.machine.compute( ctx[:request][:items], ctx[:tree_input],"tree-input-for-getcol" ) }
+      else
+        if rs[0] == "tdata" # вот так-то.. нам неоходимо особо отличать что вызвали tdata - тогда будем передавать уж ей ладно вход наш
+          ctx[:input]
+        else
+          []
+        end
+      end
+    ctx.r = ctx.machine.compute code, input_for_getcol, "syntactic-get"
+    
+    # если мы говорим стоп - то синглтоны не отработают
+    # а надо останавливать, чтобы там синглтонов не понаделали - мы сами их делаем (фиелдовые)
+#    STDERR.puts "sge: setting stop. innner r = #{ctx.r}"
+    ctx.stop="syntactic-get: dotted name transformed and called (#{req})"
+  end
+end

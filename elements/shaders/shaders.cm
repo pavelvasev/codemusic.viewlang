@@ -1,0 +1,4 @@
+##### vis.rb [shaders]
+k=obj[:shaders]
+k = [k] if !k.is_a?(Array)
+deploy_property( ctx.r, "shader",k )

@@ -1,0 +1,34 @@
+####### this.rb!
+ctx.r = ctx.machine
+
+####### root.rb!
+ctx.r = ctx.machine.top_machine
+
+`` ну типа выкинем вызов наружу.. а там буть что будет..
+###### outer.rb!
+k = ctx.machine
+ctx.r = k.parent_machine
+
+```
+не надо - мы добавили колонку parent да и все
+так то можно было и зис и рут добавить колонку..
+но впрочем - то что мы тут правила наваяли.. это же оно и есть, нет?
+не совсем - это как бы для всех полей..
+
+####### getcol.rb priority=1 prepend=true @getcol_this_parent
+`` ловим this.parent
+`` аргументы - поле и имя элемента
+`` быть может, лучше ловить - на уровне что записать в col_names эту parent сразу да и все..
+`` потому что ну а что.. и count тоже записать туда сразу.. чего вот мы тут строим из себя?
+field = ctx.input[0]
+elemname = ctx.input[1]
+
+if elemname == "parent"
+  ctx.r = field.parent_machine
+  raise ".parent field not found! this field=#{field}" if ctx.r.nil?
+  ctx.stop = 1 # т.е. не вызывать стандартный getcol..
+  return
+end
+
+
+```

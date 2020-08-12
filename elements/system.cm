@@ -1,0 +1,100 @@
+#### default_method.rb priority=-10 @default_is_stop
+if !(ctx[:stop] || ctx.r_assigned?)
+  STDERR.puts "no one computed value for request #{ctx.obj}"
+  STDERR.puts "btw machine = #{ctx.machine.to_s}"
+  raise "value not computed"
+end
+
+#### group
+<tdata/>
+
+#### value
+<tdata get="0"/>
+
+#### main!
+<scene id='scene_obj'>
+  <singletone_place>
+   <computing_mode> <!-- спец-фигня чтобы вызвался setup и то что там посчитают - вернулось бы нам сюда в пропертю, и от этого - отразилось бы в pass2 -->
+      <property name="setup_info">
+        <setup/>
+      </property>
+      <property_set name="text">
+        <scene_title/>
+      </property_set>
+   </computing_mode>
+   <params/>
+   <visual/>
+  </singletone_place>
+</scene>
+
+#### scene!
+<object type="Scene2">
+  <tdata/>
+  
+  <func name="combine_arrays">
+  <![CDATA[
+    // ну упаковка.. дали набор одномерных массивов - выдай из них сборку, один массив во viewlang-упаковке
+    // todo можно сделать ускоренную версию для 3х входов - var arr1=arguments[0]; и т.д.
+    for (var i=0; i<arguments.length; i++,index++)
+      if (typeof(arguments[i]) == "undefined") return []; // ну такая защита.. если какой-то аргумент-массив еще не рассчитался.. (бывали случаи)
+    
+    var len1 = arguments[0].length;
+    var acc = new Float32Array(len1 * arguments.length);
+    var index = 0;
+    for (var line=0; line<len1; line++)
+      for (var i=0; i<arguments.length; i++,index++)
+        acc[index] = ( arguments[i][line] || 0 );
+
+    return acc;
+]]>
+  </func>
+  
+</object>
+
+#### vis.erb!
+<object>
+  <% computing_mode do %>
+  <% ctx.input.each_with_index do |v,index| %>
+  <property name="input_<%= index %>">
+    <tdata get="<%=index%>"/>
+  </property>
+  <% end %>
+  <% end %>
+</object>
+
+#### console.log
+<field>
+  <col name="log">
+    <call_console_log><tdata/></call_console_log>
+  </col>
+</field>
+
+#### call_console_log.txt
+function () {
+  for (var i=0; i<arguments.length; i++)
+    console.log(arguments[i]);
+  return arguments;
+}
+
+#### combine.txt!
+function () {
+  return combine_arrays.apply( this,arguments );
+}
+
+#### quote.rb!
+ctx.r = "'" + ctx.input.join(",") + "'"
+``ctx.r = "'" + ctx.input[0] + "'"
+
+### params prepend=true @default_params
+<group>
+</group>
+
+### visual prepend=true @default_visuals
+<group>
+</group>
+
+### setup
+<group/>
+
+### scene_title.txt
+"Сцена"
