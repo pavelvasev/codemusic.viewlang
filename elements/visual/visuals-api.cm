@@ -1,0 +1,36 @@
+`` Предназначение - собрать в массиве visuals все визуальные объекты
+`` зачем - для забавы
+
+###### vis.rb @vis_assigner_of_ids
+$vis_obj_counter ||= 0
+def vis_assign_id( obj )
+  #STDERR.puts "gonna go, cr=#{obj}"
+  if obj[:id].nil?
+    obj[:id] = "visual_#{ $vis_obj_counter = $vis_obj_counter+1 }"
+  end
+  obj
+end
+
+vis_assign_id( ctx.r )
+
+###### vis.rb
+param_obj = ctx.r
+n1 = convert_data_name( ctx, ctx.r[:id] )
+n1.gsub!(/^emachine_/,"")
+@collected_visuals ||= []
+@collected_visuals.push n1
+
+###### scene.rb @add_visuals_api priority=1
+
+if @collected_params
+  # наверх добавим, для красоты
+  
+  ctx.r[:items].unshift "\n///////////////// visuals api done\n"
+#  ctx.r[:items].unshift @collected_params
+  
+  q2 = { :tag => :property, :name => "visuals", :value => (@collected_visuals || []) }
+  ctx.r[:items].unshift q2
+  
+  ctx.r[:items].unshift "\n///////////////// visuals api\n"
+
+end

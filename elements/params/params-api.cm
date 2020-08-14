@@ -25,6 +25,10 @@ if @collected_params
   
   ctx.r[:items].unshift "\n///////////////// params api done\n"
   ctx.r[:items].unshift @collected_params
+  
+  q2 = { :tag => :property, :name => "params", :value => @collected_params.map { |v| v[:value] } }
+  ctx.r[:items].unshift q2
+  
   ctx.r[:items].unshift "\n///////////////// params api\n"
   
 #  deploy_qml_item( ctx.r, "\n///////////////// params api\n" )

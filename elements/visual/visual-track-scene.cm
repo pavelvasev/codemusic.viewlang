@@ -1,0 +1,4 @@
+`` Предназначение - сделать все объекты зависимыми по видимости от сцены
+
+##### vis.rb
+deploy_property( ctx.r, "visible","scene_obj.visible" )
