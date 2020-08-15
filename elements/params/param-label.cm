@@ -1,0 +1,17 @@
+`` По сути это - readonly-параметр, как бы как коэффициент
+`` Подумать об этом.
+`` Возможно это даже прототип "выхода" - для realtime-стыковки
+
+##### param.rb [label] @das_param_label
+set_type( ctx.r, "Text" )
+p = obj[:label]
+  # obj[:name] ||= "label"
+p = "" if p == "true" || p == "1"
+p = "\"#{p}\""
+deploy_property( ctx.r, "prefix", p, :property )
+deploy_property( ctx.r, "text", "prefix+' '+val", :property_set )
+#input = ctx.input
+deploy_property( ctx.r, "val",ctx.input[0] || "", :property )
+
+#deploy_property( ctx.r, "val", "values", :property_set )
+# deploy_property( ctx.r, "values", "''", :property_set )

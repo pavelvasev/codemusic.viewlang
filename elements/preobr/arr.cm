@@ -36,3 +36,9 @@ function (arr1,arr2) {
   if (!Array.isArray(arr2)) arr1=[arr2];
   return arr1.concat(arr2);
 }
+
+### arrlen.txt
+function (arr) {
+  if (!Array.isArray(arr)) return 0;
+  return arr.length;
+}
