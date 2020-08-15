@@ -1,0 +1,11 @@
+##### add_import_public.rb prepend=true
+tgt=File.join(TARGET_DIR,"public")
+
+# потребность - иметь надежный бэкап файлов public проекта viewlang
+if File.exist?(tgt)
+  require 'date'
+  tgt2=File.join(TARGET_DIR,"public.backup",DateTime.now.strftime("%Y%m%d-%H%M%S"))
+  require "fileutils"
+  FileUtils.mkpath( tgt2 )
+  FileUtils.cp_r( tgt + "/.",tgt2 )
+end
