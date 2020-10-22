@@ -3,11 +3,11 @@ Column {
   
   property var tag: "right"
   
-  Param {
+  ComboBoxParam {
     id: film_src
-    text: "Шаги фильма"
+    text: "Выбор фильма"
     guid: "film-track"
-    values: (stateManager.pstate.menu || []).map( function(m,index) { return m.title || m.id || index } )
+    values: (stateManager.pstate.menu || []).map( function(m,index) { return m ? m.title || m.id || index : "-" } )
   }
 
   Param {
@@ -24,17 +24,47 @@ Column {
   
   ///////////////////////////////////////////////////
   
-  // наполняет state1 значениями из текущего состояния,
+  // наполняет state1 значениями из стека состояний,
   // которые представлены в state2 но не в state1
   // таким образом у нас выравниваются все параметры
-  function fill_up( state1, state2 )
+  function fix_state( state1, state2, prev_arr )
   {
+
+    for (k in state2)
+      if (typeof(state1[k]) == "undefined") {
+        console.log("need to fix param ",k );
+        for (var i=prev_arr.length-1; i>= 0; i--) {
+          var teststate = prev_arr[i];
+          if (typeof(teststate[k]) == "undefined") {} else {
+            console.log("param found!",teststate[k]);
+            state1[k] = teststate[k];
+            break;
+          }
+        }
+    };
+    //return state1;
+  }
+  
+  // выравнивает мультик заполняя стадии недостающими параметрами
+  function fix_states( state_chain ) {
+    var arr = [stateManager.pstate];
+
+    var chain = JSON.parse( JSON.stringify( state_chain ) );
+    
+    for (var i=0; i<chain.length-1; i++) {
+       //console.log("fix_states: fixing state",chain[i]);
+       fix_state( chain[i], chain[i+1], arr );
+       arr.push( chain[i] );
+    }
+    return chain;
   }
   
   // интерполяция 1го значения с рекурсией по массивам и хешам
   function interp1( v1, v2, r )
   {
     if (Array.isArray(v2)) {
+      if (!Array.isArray(v1)) return v2;
+        
       var res = [];
       for (var i=0; i<v2.length; i++)
         res.push( interp1( v1[i], v2[i], r ) );
@@ -45,6 +75,8 @@ Column {
     if (typeof(v2) == "undefined") return v1;
     
     if (typeof(v2) == "object") {
+      if (!v1) return v2; // защита тоже
+      
       var res = {};
       for (k in v2)
         res[k] = interp1( v1[k], v2[k], r );
@@ -59,27 +91,12 @@ Column {
   }
   
   // интерполяция между двумя состояниями
-  function interp( state1, state2,r )
+  function interp( state1, state2, r )
   {
     return interp1( state1, state2, r );
   }
   
-  // вычисление состояния для мультика
-  // вход: * states список состояний (кадровC)
-  //       * times массив длительность перехода между кадрами
-  //       * pauses массив пауз на кадре
-  //       * t текущее время (в единицах временнОй разметки)
-  // по большому счету эта идея times,pauses переходит просто к набору треков анимаций
-  // вида f: ( state1, state2, t1, t2, t) -> state которая делает интерполяцию между кадрами но только если t1 <= t <= t2
-  // и тогда можно говорить что наш мультик это набор четверок (state1, state2, t1, t2),...
-  // дык можно говорить конечно, кто ж мешает..
-  function multik_state( states, times, pauses, t )
-  {
-    var virtual_t = 0;
-    
-  }
-  
-  // по мультику представленному arr выполнить установку параметров системы
+  // по мультику arr выполнить установку параметров системы
   // arr = набор четверок (state1, state2, t1, t2),...
   function apply_mult( arr, t )
   {
@@ -93,6 +110,7 @@ Column {
     }
   }
   
+  // итак мультик у нас это массив четверок + инфа по параметрам
   function states2mult( states ) {
     var res = [];
     var t = 0;
@@ -110,11 +128,30 @@ Column {
   
   /////////////////////////
   //property var mult: states2mult( [ as1(), as2(), as3(), as4() ] )
-  property var mult: {
   
-    var states = stateManager.pstate.menu[ filmsrc.value ].variants;
+  property var stateMenu: stateManager.pstate.menu[ film_src.value ]
+  property var selectedMenu: {}
+
+  onStateMenuChanged: {
+    var s = stateMenu;
+    if (s != selectedMenu) {
+      selectedMenu = s;
+      mult = computeMult( s, stateManager.pstate );
+    }
+  }
+  
+  property var mult: []
+  
+  function computeMult( selectedMenu, baseState ) {
+    console.log("film_src.value=",film_src.value );
+    var states = selectedMenu.variants.map( function(v) { return v.params; } );
+    console.log( "see states for mult:",states.toString() );
+    states = fix_states( states );
+    console.log( "fixed states for mult:",states );
     
-    return states2mult(states);
+    var res =  states2mult(states);
+    //console.log(res);
+    return res;
   }
   
   ///////////////////////// 
@@ -122,169 +159,6 @@ Column {
   function anim_v_changed( value ) {
     apply_mult( main.mult, value );
   }
-  
-
-  
-  function as1() {
-return {
-  "FILE_treki_currentT/points/color": "0.97 1 0.11",
-  "FILE_treki_currentT/points/radius": 8.85,
-  "FILE_vrml_mnoj/extras/onoff_ShaderClipS_z": 0,
-  "FILE_vrml_mnoj/extras/ShaderClipS_z/dolya": 1,
-  "FILE_vrml_mnoj/extras/ShaderClipS_z/shag": 0,
-  "FILE_treki_current/trekN": 4,
-  "FILE_treki/trekN": 4,
-  "T": 55,
-  "FILE_treki_current/points/radius": 5.45,
-  "extras/onoff_ShaderClip_z": 1,
-  "extras/ShaderClip_z/p1": -16591.4398276705,
-  "extras/ShaderClip_z/p2": 33180,
-  "extras/onoff_ShaderClip_x": 1,
-  "extras/onoff_ShaderClip_y": 1,
-  "extras/ShaderClip_x/p1": -16591.4398276705,
-  "extras/ShaderClip_x/p2": 33180,
-  "extras/ShaderClip_y/p1": -16591.4398276705,
-  "extras/ShaderClip_y/p2": 33180,
- "show_axes": 1,
-  "cameraCenter": [
-    0,
-    0,
-    0
-  ],
-  "cameraPos": [
-    -113.45213940950974,
-    5.674300063238761,
-    1.4851698596795542
-  ]
-
-}
-  }
-
-  function as2() {
-return {
-  "show_axes": 1,
-  "cameraCenter": [
-    0,
-    0,
-    0
-  ],
-  "cameraPos": [
-    -113.45213940950974,
-    5.674300063238761,
-    1.4851698596795542
-  ],
-  "extras/AxesNames/X": "X",
-  "extras/AxesNames/Y": "Y",
-  "extras/AxesNames/Z": "Fi",
-  "extras/onoff_AxesNames": 1,
-  "extras/onoff_EnableViewsExtras": 1,
-  "extras/onoff_AutoScale": 1,
-  "extras/AutoScale/masshtab": 0.003,
-  "FILE_treki_currentT/points/color": "0.97 1 0.11",
-  "FILE_treki_currentT/points/radius": 8.85,
-  "FILE_vrml_mnoj/extras/onoff_ShaderClipS_z": 0,
-  "FILE_vrml_mnoj/extras/ShaderClipS_z/dolya": 1,
-  "FILE_vrml_mnoj/extras/ShaderClipS_z/shag": 0,
-  "FILE_treki_current/trekN": 4,
-  "FILE_treki/trekN": 4,
-  "T": 55,
-  "FILE_treki_current/points/radius": 5.45,
-  "extras/onoff_ShaderClip_z": 1,
-  "extras/ShaderClip_z/p1": -536.030172400508,
-  "extras/ShaderClip_z/p2": 33180,
-  "extras/onoff_ShaderClip_x": 1,
-  "extras/onoff_ShaderClip_y": 1,
-  "extras/ShaderClip_x/p1": -16591.4398276705,
-  "extras/ShaderClip_x/p2": 33180,
-  "extras/ShaderClip_y/p1": -16591.4398276705,
-  "extras/ShaderClip_y/p2": 33180,
-  "extras/onoff_SaveScene": 1
-}
-  }  
-  
-    function as3() {
-return {
-  "show_axes": 1,
-  "cameraCenter": [
-    0,
-    0,
-    0
-  ],
-  "cameraPos": [
-    -113.45213940950974,
-    5.674300063238761,
-    1.4851698596795542
-  ],
-  "extras/AxesNames/X": "X",
-  "extras/AxesNames/Y": "Y",
-  "extras/AxesNames/Z": "Fi",
-  "extras/onoff_AxesNames": 1,
-  "extras/onoff_EnableViewsExtras": 1,
-  "extras/onoff_AutoScale": 1,
-  "extras/AutoScale/masshtab": 0.003,
-  "FILE_treki_currentT/points/color": "0.97 1 0.11",
-  "FILE_treki_currentT/points/radius": 8.85,
-  "FILE_vrml_mnoj/extras/onoff_ShaderClipS_z": 0,
-  "FILE_vrml_mnoj/extras/ShaderClipS_z/dolya": 1,
-  "FILE_vrml_mnoj/extras/ShaderClipS_z/shag": 0,
-  "FILE_treki_current/trekN": 4,
-  "FILE_treki/trekN": 4,
-  "T": 55,
-  "FILE_treki_current/points/radius": 5.45,
-  "extras/onoff_ShaderClip_z": 1,
-  "extras/ShaderClip_z/p1": -536.030172400508,
-  "extras/ShaderClip_z/p2": 4970,
-  "extras/onoff_ShaderClip_x": 1,
-  "extras/onoff_ShaderClip_y": 1,
-  "extras/ShaderClip_x/p1": -16591.4398276705,
-  "extras/ShaderClip_x/p2": 33180,
-  "extras/ShaderClip_y/p1": -16591.4398276705,
-  "extras/ShaderClip_y/p2": 33180,
-  "extras/onoff_SaveScene": 1
-}
-}
-
-function as4() {
-return {
-  "show_axes": 1,
-  "cameraCenter": [
-    0,
-    0,
-    0
-  ],
-  "cameraPos": [
-    6.662536041843355,
-    37.53744269096314,
-    107.01561735105965
-  ],
-  "extras/AxesNames/X": "X",
-  "extras/AxesNames/Y": "Y",
-  "extras/AxesNames/Z": "Fi",
-  "extras/onoff_AxesNames": 1,
-  "extras/onoff_EnableViewsExtras": 1,
-  "extras/onoff_AutoScale": 1,
-  "extras/AutoScale/masshtab": 0.003,
-  "FILE_treki_currentT/points/color": "0.97 1 0.11",
-  "FILE_treki_currentT/points/radius": 8.85,
-  "FILE_vrml_mnoj/extras/onoff_ShaderClipS_z": 0,
-  "FILE_vrml_mnoj/extras/ShaderClipS_z/dolya": 1,
-  "FILE_vrml_mnoj/extras/ShaderClipS_z/shag": 0,
-  "FILE_treki_current/trekN": 4,
-  "FILE_treki/trekN": 4,
-  "T": 55,
-  "FILE_treki_current/points/radius": 5.45,
-  "extras/onoff_ShaderClip_z": 1,
-  "extras/ShaderClip_z/p1": -536.030172400508,
-  "extras/ShaderClip_z/p2": 4970,
-  "extras/onoff_ShaderClip_x": 1,
-  "extras/onoff_ShaderClip_y": 1,
-  "extras/ShaderClip_x/p1": -16591.4398276705,
-  "extras/ShaderClip_x/p2": 33180,
-  "extras/ShaderClip_y/p1": -16591.4398276705,
-  "extras/ShaderClip_y/p2": 33180,
-  "extras/onoff_SaveScene": 1
-}
-}
 
   ///////////////////////////////////////////////////
   
@@ -309,6 +183,7 @@ return {
   // todo один setTimeout при нескольких вызовах
 
   function setParams(hash) {
+    console.log("mult patch",hash );
     stateManager.patchState( hash );
     // сразу же нельзя ибо там еще в эти параметры основной не пропатчился параметр анимации
     setTimeout( function() {

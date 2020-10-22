@@ -91,6 +91,7 @@ SimpleDialog {
     obj = Object.assign( {}, obj )
     delete obj['menu'];
     delete obj['presets'];
+    delete obj['film-T']; // важно чтобы этой переменной там не было тоже
     
     if (!Array.isArray(mnu.variants)) mnu.variants = [];
     
