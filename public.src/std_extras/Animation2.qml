@@ -3,11 +3,13 @@ Column {
   
   property var tag: "right"
   
+  property var sceneMenu: menuManager.menu || []
+  
   ComboBoxParam {
     id: film_src
     text: "Выбор фильма"
     guid: "film-track"
-    values: (stateManager.pstate.menu || []).map( function(m,index) { return m ? m.title || m.id || index : "-" } )
+    values: sceneMenu.map( function(m,index) { return m ? m.title || m.id || index : "-" } )
   }
 
   Param {
@@ -129,7 +131,7 @@ Column {
   /////////////////////////
   //property var mult: states2mult( [ as1(), as2(), as3(), as4() ] )
   
-  property var stateMenu: stateManager.pstate.menu[ film_src.value ]
+  property var stateMenu: sceneMenu[ film_src.value ] || {}
   property var selectedMenu: {}
 
   onStateMenuChanged: {
@@ -142,7 +144,10 @@ Column {
   
   property var mult: []
   
+  // здесь mult это как раз серия состояний (а не там четверки всякие)
   function computeMult( selectedMenu, baseState ) {
+    if (!selectedMenu) return [];
+    if (!selectedMenu.variants) return [];
     console.log("film_src.value=",film_src.value );
     var states = selectedMenu.variants.map( function(v) { return v.params; } );
     console.log( "see states for mult:",states.toString() );
@@ -163,6 +168,7 @@ Column {
   ///////////////////////////////////////////////////
   
   property var stateManager: qmlEngine.rootObject.stateManager
+  property var menuManager: qmlEngine.rootObject.menuManager
   
   // у нас 2 способа получить параметры.. - у параметра и через state (в state пишут псевдо-параметры типа камеры)
   function getParam( name ) {
