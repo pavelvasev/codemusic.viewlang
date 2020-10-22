@@ -1,7 +1,7 @@
 // Предназначение - по заданному списку групп-и-пресетов построить гуи для их вызова
 Item {
   id: gen
-  property var input: new Object();
+  property var input: []
   
   property var stateManager
   
@@ -17,8 +17,8 @@ Item {
   }
 
   property var cats: input
-  
   property var catsKeys: Object.keys( cats )
+  // работает и с массивами
   
   Flow {
     property var tag: "top"
@@ -38,27 +38,24 @@ Item {
   
   Repeater {
     model: catsKeys.length
-    onModelChanged: console.log("pgen keys=",catsKeys );
+    //onModelChanged: console.log("pgen keys=",catsKeys );
     Row {
       spacing: 3
       
-      property var cat: cats[catName]
+      property var cat: { var q = cats[catName]; if (!Array.isArray(q.variants)) q.variants=[]; return q; }
       property var catName: catsKeys[index]
       Text {
-        text: "<a href='javascript:;'>" + (cat.title || catName) + "</a>"
+        text: "<a href='javascript:;'>" + (cat.title || "menu"+catName) + "</a>"
         y: 2
         id: txt
         onTextChanged: {
           var r = txt.dom;
-          // console.log("llllllll r=",r);
           var link = r.children[0].children[0];
-          // console.log("setting up to link",link);
           link.onclick = function() {
-            console.log("clicked");
-            addvariant.categoryCode = catName;
-            addvariant.open();
+            editmenu.input = cat;
+            editmenu.catName = catName;
+            editmenu.open();
           }
-          //debugger;
         }
       }
       property var iscombo: cat.gui == "combo"
@@ -97,36 +94,21 @@ Item {
     return;
   }
 
-/*  
-    
-
-    var obj = hasher.read_hash_obj();
-    if (!obj.params)
-      obj.params = newparams;
-    else {
-      for (paramname in newparams)
-        if (newparams.hasOwnProperty(paramname))
-          obj.params[paramname] = newparams[paramname];
-    }
-    // теперь obj.params это то что надо итого
-    hasher.overwriteParamsInHash( obj.params );
-    console.log("sending event!");
-    findRootScene( gen ).windowHashToParams();
-    // возможный побочный эффект - все write себе скажут, будет много change-ов
-    // ну и ладно так надежнее
-    console.log("PresetGuiGenerator: click processed");
-  }
-  
-  ParamUrlHashing {
-    enabled: false
-    manual: true
-    id: hasher
-  }
-*/
-
-  AddVariant {
-    id: addvariant
+  EditMenu {
+    id: editmenu
     stateManager: gen.stateManager
+    property var catName
+    onEdited: {
+      // сохраним в объект состояния наше изменение по меню
+      // может можно сказать setParam( "menu", getParam("menu")[catName]=obj )?
+      console.log("saving menu content to state. name=",catName,"value=",obj);
+
+      stateManager.pstate.menu[catName] = obj;
+      stateManager.pstate.menu = JSON.parse( JSON.stringify( stateManager.pstate.menu ) );
+      // без этого оно не хотит признавать шо объект изменился?
+      
+      stateManager.broadcastState();
+    }
   }
 
 
