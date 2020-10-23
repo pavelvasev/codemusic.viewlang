@@ -11,7 +11,7 @@ SimpleDialog {
   property var input: ""
 
   property var stateManager
-  title: "Состав меню "+(input.title || input.id)
+  title: "Редактор скрипта меню"; //+(input.title || input.id)
   onAfterOpen: showmenucode( edt.input )
 
   height: coco.height+40

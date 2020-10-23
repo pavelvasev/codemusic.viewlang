@@ -26,7 +26,7 @@ Item {
     console.log("computing presets menu..");
 
     for (var i=0; i<recs.length; i++) {
-      var addMenu = function(title) {
+      var createMenu = function(title) {
         var menu = { title: title, variants: [], gui: "combo" }
         //new Object( {} );
         menu.add = function( title, params ) {
@@ -38,6 +38,7 @@ Item {
         res.push( menu );
         return menu;
       }
+      var addMenu = createMenu;
       // передаем управление туды - пусть добавляют меню или что хотят делают
       try {
         eval( recs[i] );
@@ -60,7 +61,7 @@ Item {
     property var tag: "top"
     text: "Добавить меню"
     onClicked: {
-      var code = "var menu=addMenu( \"Новое\" );";
+      var code = "var menu=createMenu( \"Новое\" );";
       //itm.value.push( { "title" : "Новое меню", "id":"new-menu", "gui": "combo" } );
       itm.value.push( code );
       itm.value = JSON.parse( JSON.stringify( itm.value )); // без этого оно чето не реагирует
@@ -109,8 +110,8 @@ Item {
       for (p in v) {
         var obj = v[p];
         // итак у нас есть p - имя, и obj - объектна запись
-        //var code = "var menu = addMenu();\n\n"menu.name(\""+obj.title+"\");";
-        var code = "var menu = addMenu(\""+obj.title+"\");";
+        //var code = "menu.name(\""+obj.title+"\");";
+        var code = "var menu = createMenu(\""+obj.title+"\");";
         var vs = obj.variants || [];
         for (var i=0; i<vs.length; i++) {
           var variant = vs[i];
