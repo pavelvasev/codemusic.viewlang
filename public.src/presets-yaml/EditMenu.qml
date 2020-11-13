@@ -114,6 +114,7 @@ SimpleDialog {
     obj = Object.assign( {}, obj )
     delete obj['menu'];
     delete obj['presets'];
+    delete obj['afile']; // пока принудительно добавим и это, хак
     
     // убрать то что касается анимационности
     var objf = {};
@@ -151,6 +152,7 @@ SimpleDialog {
     delete obj['menu'];
     delete obj['presets'];
     //delete obj['film-T'];
+    delete obj['afile']; // пока принудительно добавим и это, хак    
     
     // убрать то что касается анимационности
     var objf = {};
@@ -175,11 +177,14 @@ SimpleDialog {
       for (prop in prev) {
         if (arreq(prev[prop],obj[prop])) continue;
         if (prev[prop] == obj[prop]) continue;
+        if (prop.indexOf("Animation2") >= 0) continue;
         //console.log("value of prop",prop,"not equal:",prev[prop],obj[prop]);
         obj2[prop] = obj[prop];
       }
       obj = obj2;
     }
+    
+    console.log("add2 computed params: ",obj );
 
     obj = { title: "Введите название", params: obj }
     mnu.variants.push( obj );
