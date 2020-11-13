@@ -10,10 +10,11 @@ Column {
     text: "Выбор фильма"
     guid: "film-track"
     values: sceneMenu.map( function(m,index) { return m ? m.title || m.id || index : "-" } )
+    acombo.width: 200
   }
   
   ComboBoxParam {
-    width: 200
+    acombo.width: 200
     id: film_episode
     text: "Эпизод"
     guid: "film-episode"
